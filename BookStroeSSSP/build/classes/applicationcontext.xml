@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+<!-- 自動掃描 -->
+<context:component-scan base-package="bookstore">
+<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+</context:component-scan>
+
+<!-- 配置資料庫 -->
+<context:property-placeholder location="classpath:db.properties"/>
+<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+<property name="user" value="${user}"></property>
+<property name="password" value="${password}"></property>
+<property name="driverClass" value="${driverClass}"></property>
+<property name="jdbcUrl" value="${jdbcUrl}"></property>
+</bean>
+<!-- 配至JPA EntitiyManagerFactory -->
+<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+<property name="dataSource" ref="dataSource"></property>
+<!-- JPA適配器 -->
+<property name="jpaVendorAdapter">
+<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"></bean>
+</property>
+<!-- 掃描entity註解 -->
+<property name="packagesToScan" value="bookstore"></property>
+<!-- jpa基本屬性 -->
+<property name="jpaProperties">
+<props>
+<prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+
+<prop key="hibernate.hbm2ddl.auto">update</prop>
+<prop key="hibernate.show_sql">true</prop>
+<prop key="hibernate.format_sql">true</prop>
+<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+
+<prop key="hibernate.cache.use_second_level_cache">true</prop>
+<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
+<prop key="hibernate.cache.use_query_cache">true</prop>
+</props>
+</property>
+<property name="sharedCacheMode" value="ENABLE_SELECTIVE"></property>
+</bean>
+<!-- TRANSACTION -->
+<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+<property name="entityManagerFactory" ref="entityManagerFactory"></property>
+</bean>
+<!-- 配置事務註解 -->
+<tx:annotation-driven transaction-manager="transactionManager"/>
+<!-- 配至SpriingData -->
+<jpa:repositories base-package="bookstore" entity-manager-factory-ref="entityManagerFactory"></jpa:repositories>
+</beans>
